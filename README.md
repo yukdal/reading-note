@@ -72,6 +72,13 @@ npm run build
 
 ## 5. GitHub Pages로 배포하기
 
+현재 서비스: https://yukdal.github.io/reading-note/
+소스 저장소: https://github.com/yukdal/reading-note
+
+전용 저장소와 Actions 자동 배포를 설정했습니다. main 변경 시 테스트 105개와 빌드가 통과하면 게시됩니다.
+현재 저장소 이름은 reading-note이며, workflow의 빌드 경로도 /reading-note/입니다. 저장소 이름을 바꾸면 이 경로도 변경해야 합니다.
+아래 순서는 새 저장소에 다시 배포할 때 참고하세요.
+
 1. GitHub에 새 저장소를 만들고 이 폴더를 push 합니다.
 2. 저장소 **Settings > Pages**(화면 위치는 바뀔 수 있음)에서 **Source**를 "GitHub Actions"로 바꿉니다.
 3. 저장소 **Settings > Secrets and variables > Actions > Variables** 탭(화면 위치는 바뀔 수 있음)에 변수 2개를 추가합니다.
@@ -125,12 +132,14 @@ npm run build
 | 맵 저장 | 노드 작성·저장·새로고침 후 내용 유지 확인 |
 | 접근 권한 | RLS, 익명 조회 차단, 테이블 직접 쓰기 차단, 함수별 실행 권한 분리 확인 |
 | 충돌·소유권 | supabase/verify_runtime.sql로 실제 DB에서 오래된 버전 거부·타인/비로그인 쓰기 거부 확인. 임시 변경은 ROLLBACK |
-| 자동 검사 | 테스트 105개 통과, 타입 검사와 빌드 성공 |
+| 자동 검사 | 로컬 및 GitHub Actions에서 테스트 105개 통과, 타입 검사와 빌드 성공 |
+| 온라인 배포 | GitHub Pages 게시 성공. HTTPS 로그인 화면 표시 및 브라우저 오류 없음 확인 |
+| 인증 복귀 주소 | Site URL 및 Redirect URLs에 https://yukdal.github.io/reading-note/ 저장 후 새로고침으로 유지 확인 |
 
 실서버 검증 중 발견한 JSON 필드 순서에 따른 허위 충돌과 저장 후 초안 미정리를 수정했습니다.
 저장 중 추가한 초안은 보존하며, 응답이 늦게 도착해도 더 최신인 로컬 저장본을 되돌리지 않습니다.
 
-다음은 아직 확인하지 않았습니다: 실제 두 기기 간 동시 편집, 안드로이드 실기기 조작, GitHub Pages 배포,
+다음은 아직 확인하지 않았습니다: 실제 두 기기 간 동시 편집, 안드로이드 실기기 조작, 배포 주소에서 로그인 후 저장·동기화,
 비밀번호 재설정 메일의 실제 복귀, 서버 백업 파일 내보내기·가져오기, Apps Script 예약 백업·복원.
 데모 브라우저 기록은 서버로 자동 이전하지 않았으며 별도 브라우저 캐시에 남아 있습니다.
 
