@@ -1,0 +1,525 @@
+:root {
+  --bg: #fdf6ec;
+  --wood: #a9703f;
+  --wood-dark: #7a4e2b;
+  --ink: #3b2a1a;
+  --accent: #c0612f;
+  --card-bg: #fffaf2;
+  --border: #e0c9a6;
+  --danger: #b33a2a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+button {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.app-banner {
+  background: #fff3cd;
+  color: #5c4300;
+  padding: 10px 16px;
+  text-align: center;
+  font-weight: 600;
+  border-bottom: 2px solid #e4c761;
+}
+
+.app-header {
+  padding: 16px;
+}
+
+.app-header h1 {
+  margin: 0 0 12px;
+  font-size: 1.5rem;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.btn:hover {
+  background: #f3e4cc;
+}
+
+.filter-btn.active,
+.btn.active {
+  background: var(--wood);
+  color: #fff;
+  border-color: var(--wood-dark);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-primary:hover {
+  background: #a84f26;
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+
+.shelf-empty {
+  padding: 48px 16px;
+  text-align: center;
+  color: #6b5640;
+}
+
+.shelf-wrap {
+  --book-h: 190px;
+  --row-gap: 28px;
+  --board-h: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  column-gap: 10px;
+  row-gap: var(--row-gap);
+  padding: 0 16px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent var(--book-h),
+    var(--wood) var(--book-h),
+    var(--wood-dark) calc(var(--book-h) + var(--board-h)),
+    transparent calc(var(--book-h) + var(--board-h)),
+    transparent calc(var(--book-h) + var(--row-gap))
+  );
+  background-size: 100% calc(var(--book-h) + var(--row-gap));
+  background-repeat: repeat-y;
+}
+
+.book-spine {
+  height: var(--book-h);
+  width: var(--spine-width, 40px);
+  flex: 0 0 var(--spine-width, 40px);
+  background: var(--spine-color, #8b4513);
+  color: var(--spine-text-color, #fff);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 4px 6px 6px 4px;
+  box-shadow: inset -3px 0 6px rgba(0, 0, 0, 0.2), 2px 2px 4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  padding: 10px 4px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.book-spine .spine-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-height: 100%;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+dialog {
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  background: var(--card-bg);
+  color: var(--ink);
+  max-width: min(480px, 96vw);
+  width: 100%;
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+
+dialog::backdrop {
+  background: rgba(40, 25, 10, 0.5);
+}
+
+.dialog-body {
+  padding: 20px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.book-dialog-inner {
+  animation: book-open 0.4s ease-out;
+  transform-origin: left center;
+}
+
+@keyframes book-open {
+  from {
+    transform: rotateY(-70deg) translateX(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: rotateY(0deg) translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-dialog-inner {
+    animation: book-open-reduced 0.2s ease-out;
+  }
+  @keyframes book-open-reduced {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+.book-cover {
+  width: 140px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  margin: 0 auto 16px;
+  display: block;
+}
+
+.book-cover-fallback {
+  width: 140px;
+  height: 200px;
+  border-radius: 6px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 10px;
+  font-weight: 700;
+  word-break: keep-all;
+}
+
+.book-info dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  margin: 0 0 16px;
+}
+
+.book-info dt {
+  font-weight: 600;
+  color: #6b5640;
+}
+
+.book-info dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.book-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.confirm-delete {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  background: #fbe9e5;
+}
+
+.confirm-delete p {
+  margin: 0 0 10px;
+}
+
+.form-field {
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-field label {
+  font-weight: 600;
+}
+
+.form-field input,
+.form-field select {
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.form-field input[aria-invalid='true'],
+.form-field select[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.editor-page {
+  padding: 16px;
+}
+
+.editor-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.editor-header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  flex: 1 1 auto;
+  min-width: 160px;
+}
+
+.editor-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.save-status {
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.save-status.is-error {
+  background: #fbe9e5;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.save-status.is-conflict {
+  background: #fff3cd;
+  border-color: #e4c761;
+  color: #5c4300;
+}
+
+.mindmap-editor,
+.outline-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mindmap-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.color-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.color-field input[type='color'] {
+  width: 44px;
+  height: 44px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+}
+
+.mindmap-canvas {
+  height: 60vh;
+  min-height: 320px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  touch-action: none; /* 캔버스 드래그/패닝이 페이지 스크롤과 충돌하지 않게 */
+}
+
+.mindmap-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b5640;
+}
+
+.outline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.outline-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.outline-toggle {
+  padding: 0;
+}
+
+.outline-text-field input[type='text'] {
+  min-height: 44px;
+  min-width: 140px;
+  padding: 6px 10px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.outline-row input[type='color'] {
+  width: 44px;
+  height: 44px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+}
+
+.backup-panel {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.backup-panel .form-field input[type='file'] {
+  max-width: 100%;
+}
+
+.backup-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.backup-status {
+  font-size: 0.9rem;
+  color: #6b5640;
+  margin: 0;
+}
+
+.backup-preview {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--card-bg);
+}
+
+.backup-preview ul {
+  margin: 4px 0 12px;
+  padding-left: 20px;
+}
+
+/* ---- 휴대폰(360px 기준) 가로 넘침 최후 방어선 ---- */
+html,
+body {
+  overflow-x: hidden;
+}
+
+/* ---- 맵 편집 화면: 작은 화면에서는 버튼 툴바를 엄지가 닿는 화면 아래에 고정 ---- */
+@media (max-width: 600px) {
+  .mindmap-toolbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    margin: 0;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .mindmap-editor {
+    padding-bottom: 72px; /* 고정 툴바에 콘텐츠가 가려지지 않게 */
+  }
+
+  /* ponytail: 헤더+탭 높이를 가늠한 대략값. 실기기로 측정하지 않았으니 겹치면 이 값을 조정할 것. */
+  .mindmap-canvas {
+    height: calc(100dvh - 220px);
+    min-height: 240px;
+  }
+}
+
+/* 가지 색상과 주제의 계층을 분명하게 표시한다. */
+.mindmap-editor .mindmap-canvas .map-container .me-tpc {
+  border-radius: 10px;
+  padding: 8px 14px;
+}
+
+.mindmap-editor .mindmap-canvas .map-container .me-root .me-tpc {
+  font-size: 24px;
+  border-radius: 18px;
+  padding: 16px 28px;
+}
