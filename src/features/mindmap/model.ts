@@ -178,6 +178,23 @@ export function deleteBranch(nodes: MindmapNode[], nodeId: string): MindmapNode[
   return normalizeOrder(nodes.filter((n) => !toRemove.has(n.id)));
 }
 
+/** 삭제 전 확인이 필요한지 판단한다: 하위가 있거나 글이 비어 있지 않으면 확인이 필요하다. */
+export function needsDeleteConfirm(nodes: MindmapNode[], nodeId: string): boolean {
+  const target = nodes.find((n) => n.id === nodeId);
+  if (!target) return false;
+  return countDescendants(nodes, nodeId) > 0 || target.text.trim() !== '';
+}
+
+/** 삭제 확인 대화상자에 보여줄 문구. 하위가 있으면 개수를, 없으면 글 내용을 보여준다. */
+export function deleteConfirmMessage(nodes: MindmapNode[], nodeId: string): string {
+  const count = countDescendants(nodes, nodeId);
+  if (count > 0) {
+    return `하위 ${count}개 포함 삭제할까요? 이 작업은 되돌릴 수 없습니다.`;
+  }
+  const target = nodes.find((n) => n.id === nodeId);
+  return `'${target?.text ?? ''}' 노드를 삭제할까요? 이 작업은 되돌릴 수 없습니다.`;
+}
+
 export function countDescendants(nodes: MindmapNode[], nodeId: string): number {
   let count = 0;
   const queue = [nodeId];

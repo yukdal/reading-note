@@ -3,8 +3,9 @@ import type { MindmapNode } from '../../types';
 import {
   addChild,
   addSibling,
-  countDescendants,
   deleteBranch,
+  deleteConfirmMessage,
+  needsDeleteConfirm,
   setColor,
   setText,
   toggleCollapsed,
@@ -70,7 +71,7 @@ export default function OutlineEditor({ nodes, onChange, readOnly = false }: Out
     onChange(setColor(nodes, id, color));
   }
   function handleDeleteClick(id: string) {
-    if (countDescendants(nodes, id) > 0) {
+    if (needsDeleteConfirm(nodes, id)) {
       setPendingDeleteId(id);
     } else {
       onChange(deleteBranch(nodes, id));
@@ -104,49 +105,51 @@ export default function OutlineEditor({ nodes, onChange, readOnly = false }: Out
               </button>
               <label className="outline-text-field">
                 <span className="visually-hidden">{isRoot ? '중심 노드 글(책 제목)' : '노드 글'}</span>
-                <input
-                  type="text"
+                <textarea
                   value={node.text}
                   readOnly={isRoot || readOnly}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => handleTextChange(node.id, e.target.value)}
+                  rows={Math.max(1, node.text.split('\n').length)}
+                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleTextChange(node.id, e.target.value)}
                   onFocus={(e) => e.currentTarget.scrollIntoView({ block: 'nearest' })}
                   style={{ borderColor: node.color }}
                 />
               </label>
-              <input
-                type="color"
-                value={node.color}
-                onChange={(e) => handleColor(node.id, e.target.value)}
-                disabled={readOnly}
-                aria-label={`${node.text || '노드'} 색상`}
-              />
-              <button
-                type="button"
-                className="btn"
-                onClick={() => handleAddChild(node.id)}
-                disabled={readOnly}
-              >
-                자식 추가
-              </button>
-              <button
-                type="button"
-                className="btn"
-                onClick={() => handleAddSibling(node.id)}
-                disabled={readOnly || isRoot}
-              >
-                형제 추가
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={() => handleDeleteClick(node.id)}
-                disabled={readOnly || isRoot}
-              >
-                삭제
-              </button>
+              <div className="outline-row-actions">
+                <input
+                  type="color"
+                  value={node.color}
+                  onChange={(e) => handleColor(node.id, e.target.value)}
+                  disabled={readOnly}
+                  aria-label={`${node.text || '노드'} 색상`}
+                />
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => handleAddChild(node.id)}
+                  disabled={readOnly}
+                >
+                  자식 추가
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => handleAddSibling(node.id)}
+                  disabled={readOnly || isRoot}
+                >
+                  형제 추가
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger outline-delete"
+                  onClick={() => handleDeleteClick(node.id)}
+                  disabled={readOnly || isRoot}
+                >
+                  삭제
+                </button>
+              </div>
               {pendingDeleteId === node.id && (
                 <div className="confirm-delete">
-                  <p>하위 {countDescendants(nodes, node.id)}개 포함 삭제할까요? 이 작업은 되돌릴 수 없습니다.</p>
+                  <p>{deleteConfirmMessage(nodes, node.id)}</p>
                   <button type="button" className="btn btn-danger" onClick={confirmDelete}>
                     삭제 확정
                   </button>

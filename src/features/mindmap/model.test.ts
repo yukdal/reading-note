@@ -6,6 +6,7 @@ import {
   countDescendants,
   createInitialNodes,
   deleteBranch,
+  needsDeleteConfirm,
   normalizeOrder,
   setColor,
   setRootText,
@@ -165,6 +166,12 @@ describe('setText', () => {
     const base = tree();
     expect(setText(base, 'root', '다른 제목')).toBe(base);
   });
+
+  it('줄바꿈이 든 글을 넣었다 꺼내도 그대로 보존됨', () => {
+    const multiline = '1장 멀티플과 시대정신\n : 세상은 어디로 가는가';
+    const nodes = setText(tree(), 'a', multiline);
+    expect(nodes.find((n) => n.id === 'a')!.text).toBe(multiline);
+  });
 });
 
 describe('setColor', () => {
@@ -202,6 +209,21 @@ describe('countDescendants', () => {
     expect(countDescendants(tree(), 'a')).toBe(1);
     expect(countDescendants(tree(), 'root')).toBe(3);
     expect(countDescendants(tree(), 'b')).toBe(0);
+  });
+});
+
+describe('needsDeleteConfirm', () => {
+  it('하위가 있으면 확인 필요', () => {
+    expect(needsDeleteConfirm(tree(), 'a')).toBe(true);
+  });
+
+  it('하위가 없고 글이 비어있으면 확인 불필요', () => {
+    const nodes = tree().map((n) => (n.id === 'b' ? { ...n, text: '' } : n));
+    expect(needsDeleteConfirm(nodes, 'b')).toBe(false);
+  });
+
+  it('하위가 없어도 글이 비어있지 않으면 확인 필요', () => {
+    expect(needsDeleteConfirm(tree(), 'b')).toBe(true);
   });
 });
 

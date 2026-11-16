@@ -7,8 +7,9 @@ import { fromMindElixir, toMindElixir } from './mindElixirAdapter';
 import {
   addChild as addChildNode,
   addSibling as addSiblingNode,
-  countDescendants,
   deleteBranch,
+  deleteConfirmMessage,
+  needsDeleteConfirm,
   setColor as setColorNode,
   toggleCollapsed,
   validateNodes,
@@ -87,7 +88,11 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
 
     mindRef.current = mind;
     lastSyncedRef.current = nodes;
-    mind.init(toMindElixir(nodes)).then(() => setReady(true));
+    mind.init(toMindElixir(nodes)).then(() => {
+      setReady(true);
+      // 레이아웃이 끝난 뒤 한 박자 늦춰 전체 가지가 보이게 화면 맞춤(기존 "화면 맞춤" 버튼과 동일한 함수).
+      requestAnimationFrame(() => mind.scaleFit());
+    });
 
     return () => {
       mind.destroy();
@@ -140,7 +145,7 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
   }
   function handleDeleteClick() {
     if (!selected || isRoot) return;
-    if (countDescendants(nodes, selected.id) > 0) {
+    if (needsDeleteConfirm(nodes, selected.id)) {
       setPendingDeleteId(selected.id);
     } else {
       applyNodes(deleteBranch(nodes, selected.id));
@@ -223,7 +228,7 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
 
       {pendingDeleteId && (
         <div className="confirm-delete">
-          <p>하위 {countDescendants(nodes, pendingDeleteId)}개 포함 삭제할까요? 이 작업은 되돌릴 수 없습니다.</p>
+          <p>{deleteConfirmMessage(nodes, pendingDeleteId)}</p>
           <button type="button" className="btn btn-danger" onClick={confirmDelete}>
             삭제 확정
           </button>

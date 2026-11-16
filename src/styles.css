@@ -101,6 +101,22 @@ button {
   border-color: var(--danger);
 }
 
+/* 비활성 버튼/색상 입력은 눌러도 되는 것처럼 보이지 않게 흐리게.
+   (:disabled가 붙어 .btn-danger보다 선택자 우선순위가 높아 빨간 배경도 덮어씀) */
+button:disabled,
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--card-bg);
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+input[type='color']:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .shelf-empty {
   padding: 48px 16px;
   text-align: center;
@@ -393,12 +409,26 @@ dialog::backdrop {
 }
 
 .mindmap-canvas {
-  height: 60vh;
-  min-height: 320px;
+  flex: 1 1 auto;
+  min-height: 160px; /* 화면이 아주 작아도 캔버스가 완전히 사라지지 않게 하는 바닥값일 뿐, 실제 높이는 flex가 남는 공간으로 정한다 */
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #fff;
   touch-action: none; /* 캔버스 드래그/패닝이 페이지 스크롤과 충돌하지 않게 */
+}
+
+/* 맵 편집 화면: 캔버스가 남는 공간을 차지하고 툴바가 그 아래 일반 흐름에 놓이도록
+   세로 flex 구조로 만든다(추정 높이값 대신 구조로 해결). PC/모바일 공통. */
+.editor-page:has(> .mindmap-editor) {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow-y: auto;
+}
+
+.editor-page:has(> .mindmap-editor) > .mindmap-editor {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .mindmap-hint {
@@ -427,13 +457,25 @@ dialog::backdrop {
   padding: 0;
 }
 
-.outline-text-field input[type='text'] {
+.outline-text-field {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.outline-text-field textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
   min-height: 44px;
-  min-width: 140px;
   padding: 6px 10px;
   border: 2px solid var(--border);
   border-radius: 6px;
-  font-size: 1rem;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+  resize: none;
+  overflow-wrap: anywhere;
+  field-sizing: content; /* 미지원 브라우저는 textarea의 rows 속성이 대신 높이를 정한다 */
 }
 
 .outline-row input[type='color'] {
@@ -443,6 +485,25 @@ dialog::backdrop {
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--card-bg);
+}
+
+/* 자식/형제 추가·삭제·색 버튼은 줄마다 항상 늘어놓지 않고, 그 항목에 포커스가
+   있을 때(탭/클릭/키보드 Tab 포함, 버튼으로 옮겨가도 유지)만 보여준다. */
+.outline-row-actions {
+  display: none;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.outline-row:focus-within .outline-row-actions {
+  display: flex;
+}
+
+.outline-row-actions .outline-delete {
+  margin-left: auto;
 }
 
 .backup-panel {
@@ -487,28 +548,27 @@ body {
   overflow-x: hidden;
 }
 
-/* ---- 맵 편집 화면: 작은 화면에서는 버튼 툴바를 엄지가 닿는 화면 아래에 고정 ---- */
+/* ---- 맵 편집 화면: 작은 화면에서는 캔버스를 먼저 보여주고 툴바를 그 아래 한 줄
+   가로 스크롤로 배치해 3줄(165px)을 차지하지 않게 한다 ---- */
 @media (max-width: 600px) {
   .mindmap-toolbar {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 10;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    order: 3;
     margin: 0;
-    background: var(--card-bg);
-    border-top: 1px solid var(--border);
-    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
   }
 
-  .mindmap-editor {
-    padding-bottom: 72px; /* 고정 툴바에 콘텐츠가 가려지지 않게 */
+  .mindmap-hint {
+    font-size: 0.75rem;
   }
 
-  /* ponytail: 헤더+탭 높이를 가늠한 대략값. 실기기로 측정하지 않았으니 겹치면 이 값을 조정할 것. */
   .mindmap-canvas {
-    height: calc(100dvh - 220px);
-    min-height: 240px;
+    order: 2;
+  }
+
+  .confirm-delete {
+    order: 2;
   }
 }
 
