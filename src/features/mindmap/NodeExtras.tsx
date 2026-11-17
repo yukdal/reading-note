@@ -58,35 +58,56 @@ interface TextColorPickerProps {
   onChange: (color: string | null) => void;
 }
 
-/** 정해진 글씨색 중에서 고르는 버튼 줄. 자유 색상표는 쓰지 않는다(읽기 어려운 색 방지). */
+/**
+ * 정해진 글씨색 중에서 고르는 버튼 줄. 자유 색상표는 쓰지 않는다(읽기 어려운 색 방지).
+ * 휴대폰 맵 도구막대에서는 CSS로 색 버튼을 숨기고 "글씨색" 버튼 하나만 보인다.
+ * 그 버튼을 누르면(open) 색 버튼이 도구막대 위에 떠서 열린다. PC와 아웃라인에서는 펼친 그대로다.
+ */
 export function TextColorPicker({ value, disabled = false, onChange }: TextColorPickerProps) {
+  const [open, setOpen] = useState(false);
+  const pick = (color: string | null) => {
+    onChange(color);
+    setOpen(false);
+  };
+
   return (
-    <div className="text-color-picker" role="group" aria-label="글씨색">
-      <span className="text-color-label" aria-hidden="true">
-        글씨색
-      </span>
+    <div className="text-color-picker">
       <button
         type="button"
-        className="btn"
-        aria-pressed={value === undefined}
-        onClick={() => onChange(null)}
+        className="btn text-color-toggle"
+        aria-expanded={open && !disabled}
+        onClick={() => setOpen((o) => !o)}
         disabled={disabled}
       >
-        기본
+        글씨색 <span className="text-color-dot" style={{ background: value ?? '#18212f' }} aria-hidden="true" />
       </button>
-      {TEXT_COLORS.map((c) => (
+      <div className={`text-color-options${open && !disabled ? ' open' : ''}`} role="group" aria-label="글씨색">
+        <span className="text-color-label" aria-hidden="true">
+          글씨색
+        </span>
         <button
-          key={c.value}
           type="button"
-          className={`color-swatch${value === c.value ? ' active' : ''}`}
-          style={{ background: c.value }}
-          aria-label={`글씨색 ${c.label}`}
-          aria-pressed={value === c.value}
-          title={c.label}
-          onClick={() => onChange(c.value)}
+          className="btn"
+          aria-pressed={value === undefined}
+          onClick={() => pick(null)}
           disabled={disabled}
-        />
-      ))}
+        >
+          기본
+        </button>
+        {TEXT_COLORS.map((c) => (
+          <button
+            key={c.value}
+            type="button"
+            className={`color-swatch${value === c.value ? ' active' : ''}`}
+            style={{ background: c.value }}
+            aria-label={`글씨색 ${c.label}`}
+            aria-pressed={value === c.value}
+            title={c.label}
+            onClick={() => pick(c.value)}
+            disabled={disabled}
+          />
+        ))}
+      </div>
     </div>
   );
 }

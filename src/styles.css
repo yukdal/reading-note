@@ -601,11 +601,27 @@ dialog::backdrop {
   gap: 8px;
 }
 
-.text-color-picker {
+.text-color-picker,
+.text-color-options {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
+}
+
+/* "글씨색" 접기 버튼은 휴대폰 맵 도구막대에서만 보인다(아래 600px 미디어 쿼리). */
+.text-color-toggle {
+  display: none;
+}
+
+.text-color-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 4px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  vertical-align: middle;
 }
 
 .text-color-label {
@@ -675,9 +691,36 @@ body {
     order: 2;
   }
 
-  /* 도구막대 한 줄 가로 스크롤 안에서는 글씨색 버튼도 줄바꿈하지 않는다 */
-  .mindmap-toolbar .text-color-picker {
-    flex-wrap: nowrap;
+  /* 도구막대를 짧게: 버튼 좌우 여백을 줄이고(누르는 높이 44px는 유지),
+     글씨색 10개 버튼(약 540px)은 "글씨색" 버튼 하나로 접는다. */
+  .mindmap-toolbar .btn {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .mindmap-toolbar .text-color-toggle {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .mindmap-toolbar .text-color-options {
+    display: none;
+  }
+
+  /* 열면 도구막대 바로 위에 떠서 보인다. fixed라서 도구막대의 가로 스크롤에 잘리지 않는다. */
+  .mindmap-toolbar .text-color-options.open {
+    display: flex;
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    z-index: 20;
+    justify-content: center;
+    padding: 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
   }
 }
 
