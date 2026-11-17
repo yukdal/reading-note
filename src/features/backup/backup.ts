@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase';
-import { validateNodes } from '../mindmap/model';
+import { sameNodeExtras, validateNodes } from '../mindmap/model';
 import type { Book, BookStatus, Mindmap, MindmapNode } from '../../types';
 
 // ponytail: 임의의 20MB 상한. 실제 Supabase/PostgREST 요청 크기 한도는 배포 시 확인 필요.
@@ -375,7 +375,8 @@ function sameNodes(a: MindmapNode[], b: MindmapNode[]): boolean {
       n.text === m.text &&
       n.color === m.color &&
       n.collapsed === m.collapsed &&
-      n.order === m.order
+      n.order === m.order &&
+      sameNodeExtras(n, m)
     );
   });
 }

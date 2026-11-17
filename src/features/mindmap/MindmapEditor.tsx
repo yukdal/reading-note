@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import MindElixir from 'mind-elixir';
 import { ko } from 'mind-elixir/i18n';
 import 'mind-elixir/style.css';
 import type { MindmapNode } from '../../types';
 import { fromMindElixir, toMindElixir } from './mindElixirAdapter';
+import { NoteEditor, TextColorPicker } from './NodeExtras';
 import {
   addChild as addChildNode,
   addSibling as addSiblingNode,
@@ -11,6 +12,8 @@ import {
   deleteConfirmMessage,
   needsDeleteConfirm,
   setColor as setColorNode,
+  setNote,
+  setTextColor,
   toggleCollapsed,
   validateNodes,
 } from './model';
@@ -33,6 +36,7 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
   const [ready, setReady] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [noteOpenId, setNoteOpenId] = useState<string | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -70,7 +74,7 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
     mind.bus.addListener('operation', () => {
       let converted: MindmapNode[] | null = null;
       try {
-        converted = fromMindElixir(mind.getData());
+        converted = fromMindElixir(mind.getData(), lastSyncedRef.current);
       } catch {
         converted = null;
       }
@@ -126,6 +130,7 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
   const isRoot = selected !== null && selected.parentId === null;
   const hasChildren = selected !== null && nodes.some((n) => n.parentId === selected.id);
   const disabled = !ready || readOnly;
+  const noteNode = nodes.find((n) => n.id === noteOpenId) ?? null;
 
   function handleAddChild() {
     if (!selected) return;
@@ -162,6 +167,21 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
     applyNodes(deleteBranch(nodes, pendingDeleteId));
     setPendingDeleteId(null);
     setSelectedId(null);
+  }
+  function handleTextColor(color: string | null) {
+    if (!selected) return;
+    applyNodes(setTextColor(nodes, selected.id, color));
+  }
+  function handleSaveNote(note: string) {
+    if (!noteNode) return;
+    applyNodes(setNote(nodes, noteNode.id, note));
+    setNoteOpenId(null);
+  }
+  // 맵의 📝(Mind Elixir icons)을 누르면 그 항목 메모를 연다. 키보드 사용자는 도구막대 "메모" 버튼을 쓴다.
+  function handleCanvasClick(e: MouseEvent<HTMLDivElement>) {
+    const icon = (e.target as HTMLElement).closest('.icons');
+    const topic = icon?.closest('me-tpc') as (HTMLElement & { nodeObj?: { id: string } }) | null | undefined;
+    if (topic?.nodeObj) setNoteOpenId(topic.nodeObj.id);
   }
   function handleZoomIn() {
     const mind = mindRef.current;
@@ -211,6 +231,15 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
         >
           {selected?.collapsed ? '펼치기' : '접기'}
         </button>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => selected && setNoteOpenId(selected.id)}
+          disabled={!ready || !selected}
+        >
+          {selected?.note ? '메모 📝' : '메모'}
+        </button>
+        <TextColorPicker value={selected?.textColor} onChange={handleTextColor} disabled={disabled || !selected} />
         <label className="color-field">
           색상
           <input
@@ -232,6 +261,17 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
         </button>
       </div>
 
+      {noteNode && (
+        <NoteEditor
+          key={noteNode.id}
+          label={noteNode.text}
+          note={noteNode.note ?? ''}
+          readOnly={readOnly}
+          onSave={handleSaveNote}
+          onClose={() => setNoteOpenId(null)}
+        />
+      )}
+
       {pendingDeleteId && (
         <div className="confirm-delete">
           <p>{deleteConfirmMessage(nodes, pendingDeleteId)}</p>
@@ -248,7 +288,7 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
           처리가 없어 미지원으로 확인됨. 위 확대/축소/화면 맞춤 버튼으로 대체 제공.
           ponytail: 터치 핀치가 꼭 필요해지면 별도 제스처 라이브러리 없이 pointer 이벤트 2개를
           직접 추적해 scale()을 호출하는 방식으로 추가. */}
-      <div ref={containerRef} className="mindmap-canvas" aria-label="마인드맵" />
+      <div ref={containerRef} className="mindmap-canvas" aria-label="마인드맵" onClick={handleCanvasClick} />
     </div>
   );
 }

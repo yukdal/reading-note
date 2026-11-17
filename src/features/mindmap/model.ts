@@ -4,6 +4,21 @@ export type ValidationResult = { ok: true } | { ok: false; error: string };
 
 const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
 
+export const MAX_NOTE_LENGTH = 2000;
+
+/** 글씨색은 자유 색상표 대신 밝은 노드 배경에서 잘 읽히는 정해진 색만 고른다. */
+export const TEXT_COLORS: { label: string; value: string }[] = [
+  { label: '검정', value: '#222222' },
+  { label: '진회색', value: '#555555' },
+  { label: '빨강', value: '#c62828' },
+  { label: '주황', value: '#b45309' },
+  { label: '초록', value: '#2e7d32' },
+  { label: '파랑', value: '#1d4ed8' },
+  { label: '남색', value: '#283593' },
+  { label: '보라', value: '#6a1b9a' },
+  { label: '갈색', value: '#6d4c41' },
+];
+
 /**
  * nodes가 하나의 마인드맵으로서 올바른 구조인지 검사한다.
  * (중심 노드 1개, id 중복 없음, 부모 참조 유효, 순환 없음, 중심에 연결됨, 형제 order 0부터 연속)
@@ -26,6 +41,12 @@ export function validateNodes(nodes: MindmapNode[]): ValidationResult {
   for (const n of nodes) {
     if (!HEX_COLOR.test(n.color)) {
       return { ok: false, error: '색상은 #RRGGBB 형식이어야 합니다.' };
+    }
+    if (n.note !== undefined && (typeof n.note !== 'string' || n.note.length > MAX_NOTE_LENGTH)) {
+      return { ok: false, error: `메모는 ${MAX_NOTE_LENGTH}자 이하의 글이어야 합니다.` };
+    }
+    if (n.textColor !== undefined && (typeof n.textColor !== 'string' || !HEX_COLOR.test(n.textColor))) {
+      return { ok: false, error: '글씨색은 #RRGGBB 형식이어야 합니다.' };
     }
     if (n.parentId !== null) {
       if (n.id === n.parentId) {
@@ -153,6 +174,31 @@ export function setText(nodes: MindmapNode[], nodeId: string, text: string): Min
 
 export function setColor(nodes: MindmapNode[], nodeId: string, color: string): MindmapNode[] {
   return nodes.map((n) => (n.id === nodeId ? { ...n, color } : n));
+}
+
+/** 메모를 바꾼다. 공백뿐이면 note 키를 지우고, 너무 길면 상한까지만 남긴다. */
+export function setNote(nodes: MindmapNode[], nodeId: string, note: string): MindmapNode[] {
+  const value = note.trim() === '' ? null : note.slice(0, MAX_NOTE_LENGTH);
+  return nodes.map((n) => {
+    if (n.id !== nodeId) return n;
+    const { note: _old, ...rest } = n;
+    return value === null ? rest : { ...rest, note: value };
+  });
+}
+
+/** 글씨색을 바꾼다. null이면 기본색(키 삭제), 형식이 틀리면 원본 그대로. */
+export function setTextColor(nodes: MindmapNode[], nodeId: string, color: string | null): MindmapNode[] {
+  if (color !== null && !HEX_COLOR.test(color)) return nodes;
+  return nodes.map((n) => {
+    if (n.id !== nodeId) return n;
+    const { textColor: _old, ...rest } = n;
+    return color === null ? rest : { ...rest, textColor: color };
+  });
+}
+
+/** 비교용: 메모·글씨색이 같은지(없는 것과 빈 것은 같게 본다). */
+export function sameNodeExtras(a: MindmapNode, b: MindmapNode): boolean {
+  return (a.note ?? '') === (b.note ?? '') && (a.textColor ?? '') === (b.textColor ?? '');
 }
 
 export function toggleCollapsed(nodes: MindmapNode[], nodeId: string): MindmapNode[] {

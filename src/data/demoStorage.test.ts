@@ -87,3 +87,32 @@ describe('데모 JSON 가져오기', () => {
     expect(mergeLocalImport(current, diff, now).status).toBe('conflict');
   });
 });
+describe('메모·글씨색 백업 왕복', () => {
+  function withExtras(): Snapshot {
+    const s = snapshot();
+    s.mindmaps[0].data.nodes = s.mindmaps[0].data.nodes.map((n, i) =>
+      i === 1 ? { ...n, note: '메모 <script>x</script>', textColor: '#1d4ed8' } : n,
+    );
+    return s;
+  }
+
+  it('내보낸 파일을 다시 읽으면 메모·글씨색이 그대로 남고 가져오기에 반영된다', () => {
+    const exported = withExtras();
+    const parsed = parseBackupFile(JSON.stringify(exported));
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.backup.mindmaps[0].data.nodes).toEqual(exported.mindmaps[0].data.nodes);
+
+    const current = snapshot();
+    const diff = diffBackup(parsed.backup, current);
+    expect(diff.sameCount).toBe(0);
+    const result = mergeLocalImport(current, diff, now);
+    if (result.status !== 'ok') throw new Error('unexpected conflict');
+    expect(result.snapshot.mindmaps[0].data.nodes).toEqual(exported.mindmaps[0].data.nodes);
+  });
+
+  it('글씨색 형식이 틀린 백업 파일은 거부한다', () => {
+    const bad = withExtras();
+    bad.mindmaps[0].data.nodes[1].textColor = 'javascript:alert(1)';
+    expect(parseBackupFile(JSON.stringify(bad)).ok).toBe(false);
+  });
+});

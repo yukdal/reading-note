@@ -77,3 +77,40 @@ describe('노드 색상 표시', () => {
     expect(fromMindElixir(data).find((node) => node.id === 'b')).toEqual(nodes.find((node) => node.id === 'b'));
   });
 });
+describe('메모·글씨색 왕복', () => {
+  it('메모·글씨색이 있는 노드를 바꿨다 되돌려도 그대로 남는다', () => {
+    const original = tree().map((n) =>
+      n.id === 'a1'
+        ? { ...n, note: '첫 줄\n<b>둘째</b>', textColor: '#c62828' }
+        : n.id === 'root'
+          ? { ...n, textColor: '#222222' }
+          : n,
+    );
+    const restored = fromMindElixir(toMindElixir(original), original);
+    for (const node of original) expect(restored.find((n) => n.id === node.id)).toEqual(node);
+  });
+
+  it('메모 본문은 Mind Elixir에 넘기지 않고 📝 표시만 넘긴다', () => {
+    const original = tree().map((n) => (n.id === 'a' ? { ...n, note: '메모 본문' } : n));
+    const data = toMindElixir(original);
+    expect(JSON.stringify(data)).not.toContain('메모 본문');
+    const a = data.nodeData.children!.find((c) => c.id === 'a')!;
+    expect(a.icons).toEqual(['📝']);
+    expect(a.note).toBeUndefined();
+  });
+
+  it('글씨색은 style.color로 넘기고, 없으면 기존 자동 색을 쓴다', () => {
+    const original = tree().map((n) => (n.id === 'b' ? { ...n, textColor: '#2e7d32' } : n));
+    const kids = toMindElixir(original).nodeData.children!;
+    expect(kids.find((c) => c.id === 'b')!.style!.color).toBe('#2e7d32');
+    expect(kids.find((c) => c.id === 'a')!.style!.color).toBe('#18212f');
+  });
+
+  it('칸이 없는 기존 데이터에는 새 키가 생기지 않는다', () => {
+    const original = tree();
+    for (const n of fromMindElixir(toMindElixir(original), original)) {
+      expect('note' in n).toBe(false);
+      expect('textColor' in n).toBe(false);
+    }
+  });
+});

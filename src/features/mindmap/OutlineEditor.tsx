@@ -8,9 +8,12 @@ import {
   needsDeleteConfirm,
   resolveSelectedId,
   setColor,
+  setNote,
   setText,
+  setTextColor,
   toggleCollapsed,
 } from './model';
+import { NoteEditor, TextColorPicker } from './NodeExtras';
 
 interface OutlineEditorProps {
   nodes: MindmapNode[];
@@ -56,6 +59,7 @@ export default function OutlineEditor({ nodes, onChange, readOnly = false }: Out
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   // 버튼을 보여줄 줄. blur로 지우지 않는다(Safari는 버튼을 눌러도 포커스가 가지 않아 누르기 전에 사라짐).
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [noteOpenId, setNoteOpenId] = useState<string | null>(null);
   const rows = buildRows(nodes);
   const activeId = resolveSelectedId(rows.map((r) => r.node.id), selectedId);
 
@@ -80,6 +84,10 @@ export default function OutlineEditor({ nodes, onChange, readOnly = false }: Out
     } else {
       onChange(deleteBranch(nodes, id));
     }
+  }
+  function handleSaveNote(id: string, note: string) {
+    onChange(setNote(nodes, id, note));
+    setNoteOpenId(null);
   }
   function confirmDelete() {
     if (!pendingDeleteId) return;
@@ -117,9 +125,19 @@ export default function OutlineEditor({ nodes, onChange, readOnly = false }: Out
                   rows={Math.max(1, node.text.split('\n').length)}
                   onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleTextChange(node.id, e.target.value)}
                   onFocus={(e) => e.currentTarget.scrollIntoView({ block: 'nearest' })}
-                  style={{ borderColor: node.color }}
+                  style={{ borderColor: node.color, color: node.textColor }}
                 />
               </label>
+              {node.note && (
+                <button
+                  type="button"
+                  className="btn outline-note-btn"
+                  onClick={() => setNoteOpenId(node.id)}
+                  aria-label="메모 보기"
+                >
+                  📝
+                </button>
+              )}
               <div className="outline-row-actions">
                 <input
                   type="color"
@@ -146,6 +164,19 @@ export default function OutlineEditor({ nodes, onChange, readOnly = false }: Out
                 </button>
                 <button
                   type="button"
+                  className="btn"
+                  onClick={() => setNoteOpenId(node.id)}
+                  disabled={readOnly && !node.note}
+                >
+                  메모
+                </button>
+                <TextColorPicker
+                  value={node.textColor}
+                  onChange={(color) => onChange(setTextColor(nodes, node.id, color))}
+                  disabled={readOnly}
+                />
+                <button
+                  type="button"
                   className="btn btn-danger outline-delete"
                   onClick={() => handleDeleteClick(node.id)}
                   disabled={readOnly || isRoot}
@@ -153,6 +184,15 @@ export default function OutlineEditor({ nodes, onChange, readOnly = false }: Out
                   삭제
                 </button>
               </div>
+              {noteOpenId === node.id && (
+                <NoteEditor
+                  label={node.text}
+                  note={node.note ?? ''}
+                  readOnly={readOnly}
+                  onSave={(note) => handleSaveNote(node.id, note)}
+                  onClose={() => setNoteOpenId(null)}
+                />
+              )}
               {pendingDeleteId === node.id && (
                 <div className="confirm-delete">
                   <p>{deleteConfirmMessage(nodes, node.id)}</p>

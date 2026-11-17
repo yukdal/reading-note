@@ -558,6 +558,84 @@ dialog::backdrop {
   padding-left: 20px;
 }
 
+/* ---- 항목 메모·글씨색 ---- */
+.note-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+}
+
+.note-panel-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.note-panel textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 16px; /* 16px 미만이면 휴대폰에서 입력할 때 화면이 확대된다 */
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.note-count {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6b5640;
+  text-align: right;
+}
+
+.note-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.text-color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.text-color-label {
+  font-size: 0.9rem;
+}
+
+.color-swatch {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--border);
+  cursor: pointer;
+}
+
+.color-swatch.active {
+  box-shadow: 0 0 0 3px var(--ink);
+}
+
+.color-swatch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.outline-note-btn {
+  padding: 0;
+}
+
 /* ---- 휴대폰(360px 기준) 가로 넘침 최후 방어선 ---- */
 html,
 body {
@@ -591,6 +669,15 @@ body {
 
   .confirm-delete {
     order: 2;
+  }
+
+  .mindmap-editor .note-panel {
+    order: 2;
+  }
+
+  /* 도구막대 한 줄 가로 스크롤 안에서는 글씨색 버튼도 줄바꿈하지 않는다 */
+  .mindmap-toolbar .text-color-picker {
+    flex-wrap: nowrap;
   }
 }
 

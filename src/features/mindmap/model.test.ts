@@ -8,10 +8,14 @@ import {
   deleteBranch,
   needsDeleteConfirm,
   normalizeOrder,
+  MAX_NOTE_LENGTH,
   resolveSelectedId,
   setColor,
+  setNote,
   setRootText,
   setText,
+  setTextColor,
+  TEXT_COLORS,
   toggleCollapsed,
   validateNodes,
 } from './model';
@@ -247,5 +251,51 @@ describe('setRootText', () => {
   it('중심 노드 글을 바꾼다', () => {
     const nodes = setRootText(tree(), '새 제목');
     expect(nodes.find((n) => n.parentId === null)!.text).toBe('새 제목');
+  });
+});
+
+describe('메모·글씨색', () => {
+  it('setNote: 메모를 넣고, 공백뿐이면 note 키를 없앤다', () => {
+    const withNote = setNote(tree(), 'a', '중요한 문장');
+    expect(withNote.find((n) => n.id === 'a')!.note).toBe('중요한 문장');
+    const cleared = setNote(withNote, 'a', '   ');
+    expect('note' in cleared.find((n) => n.id === 'a')!).toBe(false);
+  });
+
+  it('setNote: 상한을 넘는 메모는 상한까지만 남긴다', () => {
+    const nodes = setNote(tree(), 'a', 'x'.repeat(MAX_NOTE_LENGTH + 50));
+    expect(nodes.find((n) => n.id === 'a')!.note).toHaveLength(MAX_NOTE_LENGTH);
+  });
+
+  it('setTextColor: 색을 넣고, null이면 키를 없애고, 형식이 틀리면 그대로', () => {
+    const colored = setTextColor(tree(), 'b', TEXT_COLORS[2].value);
+    expect(colored.find((n) => n.id === 'b')!.textColor).toBe(TEXT_COLORS[2].value);
+    expect('textColor' in setTextColor(colored, 'b', null).find((n) => n.id === 'b')!).toBe(false);
+    const base = tree();
+    expect(setTextColor(base, 'b', 'red')).toBe(base);
+  });
+
+  it('validateNodes: 칸이 없는 기존 노드는 통과, 잘못된 값은 거부', () => {
+    expect(validateNodes(tree())).toEqual({ ok: true });
+    const longNote = tree().map((n) => (n.id === 'a' ? { ...n, note: 'x'.repeat(MAX_NOTE_LENGTH + 1) } : n));
+    expect(validateNodes(longNote).ok).toBe(false);
+    const badColor = tree().map((n) => (n.id === 'a' ? { ...n, textColor: 'blue' } : n));
+    expect(validateNodes(badColor).ok).toBe(false);
+    const badType = tree().map((n) => (n.id === 'a' ? { ...n, note: 3 as unknown as string } : n));
+    expect(validateNodes(badType).ok).toBe(false);
+  });
+
+  it('다른 편집(글·색·접기·추가·삭제·정렬)을 해도 메모·글씨색이 남는다', () => {
+    let nodes = setTextColor(setNote(tree(), 'a', '메모'), 'a', '#222222');
+    nodes = setText(nodes, 'a', '새 글');
+    nodes = setColor(nodes, 'a', '#123456');
+    nodes = toggleCollapsed(nodes, 'a');
+    nodes = addChild(nodes, 'root');
+    nodes = addSibling(nodes, 'b');
+    nodes = deleteBranch(nodes, 'b');
+    nodes = setRootText(normalizeOrder(nodes), '다른 제목');
+    const a = nodes.find((n) => n.id === 'a')!;
+    expect(a.note).toBe('메모');
+    expect(a.textColor).toBe('#222222');
   });
 });

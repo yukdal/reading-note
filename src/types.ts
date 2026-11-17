@@ -41,6 +41,10 @@ export interface MindmapNode {
   color: string;
   collapsed: boolean;
   order: number;
+  /** 항목 메모(글자만, 최대 2000자). 비어 있으면 키 자체를 두지 않는다. */
+  note?: string;
+  /** 글씨색 #RRGGBB(정해진 색 중 하나). 기본색이면 키 자체를 두지 않는다. */
+  textColor?: string;
 }
 
 export interface MindmapData {

@@ -1,5 +1,6 @@
 import type { MindmapNode } from '../../types';
 import type { CachedMap } from '../../lib/localCache';
+import { sameNodeExtras } from './model';
 
 export type ReconcileAction =
   | { kind: 'use_server' }
@@ -23,7 +24,8 @@ export function sameNodes(a: MindmapNode[], b: MindmapNode[]): boolean {
   return a.every((node) => {
     const other = byId.get(node.id);
     return other !== undefined && node.parentId === other.parentId && node.text === other.text
-      && node.color === other.color && node.collapsed === other.collapsed && node.order === other.order;
+      && node.color === other.color && node.collapsed === other.collapsed && node.order === other.order
+      && sameNodeExtras(node, other);
   });
 }
 

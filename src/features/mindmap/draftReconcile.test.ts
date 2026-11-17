@@ -70,3 +70,17 @@ describe('실제 서버의 JSON과 저장 완료 대조', () => {
       .toBe(current);
   });
 });
+describe('메모·글씨색 비교', () => {
+  it('메모만 다른 초안은 서버와 같은 내용으로 보지 않는다', () => {
+    const draft = { nodes: [{ ...node('a', '제목'), note: '새 메모' }], baseVersion: 3 };
+    expect(reconcileDraft(draft, { nodes: [node('a', '제목')], version: 3 })).toEqual({ kind: 'offer_recover' });
+  });
+
+  it('메모·글씨색까지 같으면 키 순서가 달라도 같은 내용', () => {
+    const a = { ...node('a', '제목'), note: 'm', textColor: '#222222' };
+    const b = { textColor: '#222222', note: 'm', ...node('a', '제목') };
+    expect(reconcileDraft({ nodes: [a], baseVersion: 3 }, { nodes: [b], version: 4 })).toEqual({
+      kind: 'draft_matches_server',
+    });
+  });
+});
