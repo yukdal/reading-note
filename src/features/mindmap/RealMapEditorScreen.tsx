@@ -183,7 +183,7 @@ export default function RealMapEditorScreen({ book, mode, userId, onBack, onSwit
       <div className="editor-page">
         {header}
         {simpleLogoutButton}
-        <p className="field-error">마인드맵을 불러오지 못했습니다: {phase.message}</p>
+        <p className="field-error" role="alert">마인드맵을 불러오지 못했습니다: {phase.message}</p>
         <button type="button" className="btn" onClick={() => void load()}>
           재시도
         </button>
@@ -472,7 +472,7 @@ function AutosavingWorkspace({
         </button>
       </div>
 
-      {draftError && <p className="field-error">이 브라우저에 임시 저장하지 못했습니다: {draftError}</p>}
+      {draftError && <p className="field-error" role="alert">이 브라우저에 임시 저장하지 못했습니다: {draftError}</p>}
 
       {mode === 'map' ? (
         <MindmapEditor nodes={nodes} onChange={handleChange} readOnly={readOnly} />

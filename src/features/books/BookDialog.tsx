@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Book } from '../../types';
+import { spineTextColor } from './Bookshelf';
 
 interface BookDialogProps {
   book: Book;
@@ -70,7 +71,7 @@ export default function BookDialog({
           ) : (
             <div
               className="book-cover-fallback"
-              style={{ background: book.spine_color, color: '#fff' }}
+              style={{ background: book.spine_color, color: spineTextColor(book.spine_color) }}
             >
               {book.title}
             </div>
@@ -118,7 +119,7 @@ export default function BookDialog({
             </button>
           </div>
 
-          {errorMessage && <p className="field-error">{errorMessage}</p>}
+          {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
 
           {confirmingDelete && (
             <div className="confirm-delete">

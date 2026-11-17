@@ -40,6 +40,11 @@ function LoginOrForgot() {
   async function handleLogin(e: FormEvent) {
     e.preventDefault();
     if (!supabase) return;
+    // 빈 칸이면 서버에 묻지 않고 바로 안내한다(서버는 "비밀번호가 올바르지 않음"으로만 답해 헷갈린다).
+    if (!email.trim() || !password) {
+      setError('이메일과 비밀번호를 입력해 주세요.');
+      return;
+    }
     setBusy(true);
     setError(null);
     const { error: err } = await supabase.auth.signInWithPassword({ email, password });
@@ -50,6 +55,10 @@ function LoginOrForgot() {
   async function handleForgot(e: FormEvent) {
     e.preventDefault();
     if (!supabase) return;
+    if (!email.trim()) {
+      setError('이메일을 입력해 주세요.');
+      return;
+    }
     setBusy(true);
     setError(null);
     const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
@@ -98,7 +107,7 @@ function LoginOrForgot() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-          {error && <p className="field-error">{error}</p>}
+          {error && <p className="field-error" role="alert">{error}</p>}
           <div className="form-actions">
             <button type="button" className="btn" onClick={() => setMode('login')}>
               취소
@@ -138,7 +147,7 @@ function LoginOrForgot() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        {error && <p className="field-error">{error}</p>}
+        {error && <p className="field-error" role="alert">{error}</p>}
         <div className="form-actions">
           <button
             type="button"
@@ -227,7 +236,7 @@ function NewPasswordForm({ onDone }: { onDone: () => void }) {
             onChange={(e) => setConfirm(e.target.value)}
           />
         </div>
-        {error && <p className="field-error">{error}</p>}
+        {error && <p className="field-error" role="alert">{error}</p>}
         <div className="form-actions">
           <button type="submit" className="btn btn-primary" disabled={busy}>
             비밀번호 변경

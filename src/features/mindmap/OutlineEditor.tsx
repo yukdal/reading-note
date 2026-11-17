@@ -6,6 +6,7 @@ import {
   deleteBranch,
   deleteConfirmMessage,
   needsDeleteConfirm,
+  resolveSelectedId,
   setColor,
   setText,
   toggleCollapsed,
@@ -53,7 +54,10 @@ function buildRows(nodes: MindmapNode[]): Row[] {
 
 export default function OutlineEditor({ nodes, onChange, readOnly = false }: OutlineEditorProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  // 버튼을 보여줄 줄. blur로 지우지 않는다(Safari는 버튼을 눌러도 포커스가 가지 않아 누르기 전에 사라짐).
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const rows = buildRows(nodes);
+  const activeId = resolveSelectedId(rows.map((r) => r.node.id), selectedId);
 
   function handleTextChange(id: string, value: string) {
     onChange(setText(nodes, id, value));
@@ -91,7 +95,9 @@ export default function OutlineEditor({ nodes, onChange, readOnly = false }: Out
           return (
             <li
               key={node.id}
-              className="outline-row"
+              className={`outline-row${node.id === activeId ? ' is-selected' : ''}`}
+              onFocus={() => setSelectedId(node.id)}
+              onPointerDown={() => setSelectedId(node.id)}
               style={{ paddingLeft: `${Math.min(depth, MAX_INDENT_DEPTH) * INDENT_PX}px` }}
             >
               <button

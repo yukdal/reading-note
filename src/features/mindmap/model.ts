@@ -195,6 +195,12 @@ export function deleteConfirmMessage(nodes: MindmapNode[], nodeId: string): stri
   return `'${target?.text ?? ''}' 노드를 삭제할까요? 이 작업은 되돌릴 수 없습니다.`;
 }
 
+/** 아웃라인에서 버튼을 보여줄 줄: 선택한 줄이 화면에 있으면 그 줄, 없으면 첫 줄(중심 노드). */
+export function resolveSelectedId(visibleIds: string[], selectedId: string | null): string | null {
+  if (selectedId !== null && visibleIds.includes(selectedId)) return selectedId;
+  return visibleIds[0] ?? null;
+}
+
 export function countDescendants(nodes: MindmapNode[], nodeId: string): number {
   let count = 0;
   const queue = [nodeId];

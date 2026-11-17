@@ -88,13 +88,19 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
 
     mindRef.current = mind;
     lastSyncedRef.current = nodes;
+    // 초기화가 끝나기 전에 화면을 벗어나면(언마운트) 이미 destroy된 맵을 건드리지 않게 한다.
+    let alive = true;
     mind.init(toMindElixir(nodes)).then(() => {
+      if (!alive) return;
       setReady(true);
       // 레이아웃이 끝난 뒤 한 박자 늦춰 전체 가지가 보이게 화면 맞춤(기존 "화면 맞춤" 버튼과 동일한 함수).
-      requestAnimationFrame(() => mind.scaleFit());
+      requestAnimationFrame(() => {
+        if (alive) mind.scaleFit();
+      });
     });
 
     return () => {
+      alive = false;
       mind.destroy();
       mindRef.current = null;
       setReady(false);

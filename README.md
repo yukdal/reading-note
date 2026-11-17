@@ -75,7 +75,7 @@ npm run build
 현재 서비스: https://yukdal.github.io/reading-note/
 소스 저장소: https://github.com/yukdal/reading-note
 
-전용 저장소와 Actions 자동 배포를 설정했습니다. main 변경 시 테스트 105개와 빌드가 통과하면 게시됩니다.
+전용 저장소와 Actions 자동 배포를 설정했습니다. main 변경 시 테스트 112개와 빌드가 통과하면 게시됩니다.
 현재 저장소 이름은 reading-note이며, workflow의 빌드 경로도 /reading-note/입니다. 저장소 이름을 바꾸면 이 경로도 변경해야 합니다.
 아래 순서는 새 저장소에 다시 배포할 때 참고하세요.
 
@@ -132,7 +132,7 @@ npm run build
 | 맵 저장 | 노드 작성·저장·새로고침 후 내용 유지 확인 |
 | 접근 권한 | RLS, 익명 조회 차단, 테이블 직접 쓰기 차단, 함수별 실행 권한 분리 확인 |
 | 충돌·소유권 | supabase/verify_runtime.sql로 실제 DB에서 오래된 버전 거부·타인/비로그인 쓰기 거부 확인. 임시 변경은 ROLLBACK |
-| 자동 검사 | 로컬 및 GitHub Actions에서 테스트 105개 통과, 타입 검사와 빌드 성공 |
+| 자동 검사 | 로컬 및 GitHub Actions에서 테스트 112개 통과, 타입 검사와 빌드 성공 |
 | 온라인 배포 | GitHub Pages 게시 성공. HTTPS에서 로그인·책장·마인드맵·아웃라인 확인 |
 | 온라인 저장 | 연결 확인용 노드 수정 후 저장됨 표시, 새로고침 후 내용 유지 확인. 별도 로컬 실행 주소에서도 같은 서버 내용 확인 |
 | 모바일 화면 | 390px 너비의 별도 브라우저 탭에서 로그인된 마인드맵·하단 도구와 화면 맞춤 확인. 실제 안드로이드 터치는 미검증 |
@@ -145,7 +145,7 @@ npm run build
 비밀번호 재설정 메일의 실제 복귀, 서버 백업 파일 내보내기·가져오기, Apps Script 예약 백업·복원.
 데모 브라우저 기록은 서버로 자동 이전하지 않았으며 별도 브라우저 캐시에 남아 있습니다.
 
-Google Drive의 소스 폴더와 로컬 실행용 복사본 모두 수정했습니다. 기존 reading-note.zip은 갱신하지 않았습니다.
+기준 소스는 GitHub 저장소(yukdal/reading-note)입니다. Google Drive 폴더는 GitHub 최신본을 복사해 둔 사본이며, 수정은 git으로 받은 폴더에서 한 뒤 push하고 Drive로 복사합니다. reading-note.zip은 2026-11-14의 옛 사본입니다.
 
 
 ## 10. 폴더 구조 한눈에 보기
@@ -163,6 +163,8 @@ src/
     demo.ts                              데모 모드용 가짜 책 14권
     api.ts                               Supabase RPC 호출 + 오류 분류(classifyError)
     api.test.ts                          classifyError 테스트
+    demoStorage.ts / .test.ts            데모 모드용 브라우저(IndexedDB) 책장 저장
+    xmindExample.ts / .test.ts           XMind 예제 책과 마인드맵 데이터
   lib/
     supabase.ts                          Supabase 클라이언트 생성(env 없으면 null → 데모 모드)
     localCache.ts                        브라우저 IndexedDB 캐시(맵 임시저장/저장본, 책 목록 캐시)

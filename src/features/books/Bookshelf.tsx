@@ -32,7 +32,7 @@ function spineWidth(pageCount: number | null): number {
   return Math.round(Math.min(64, Math.max(24, scaled)));
 }
 
-function spineTextColor(hex: string): string {
+export function spineTextColor(hex: string): string {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
   if (!m) return '#ffffff';
   const [r, g, b] = [m[1], m[2], m[3]].map((h) => parseInt(h, 16));

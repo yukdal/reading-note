@@ -8,6 +8,7 @@ import {
   deleteBranch,
   needsDeleteConfirm,
   normalizeOrder,
+  resolveSelectedId,
   setColor,
   setRootText,
   setText,
@@ -224,6 +225,21 @@ describe('needsDeleteConfirm', () => {
 
   it('하위가 없어도 글이 비어있지 않으면 확인 필요', () => {
     expect(needsDeleteConfirm(tree(), 'b')).toBe(true);
+  });
+});
+
+describe('resolveSelectedId', () => {
+  it('선택한 줄이 보이면 그대로 둔다', () => {
+    expect(resolveSelectedId(['root', 'a', 'b'], 'a')).toBe('a');
+  });
+
+  it('선택한 줄이 접혔거나 삭제되면 첫 줄(중심 노드)로', () => {
+    expect(resolveSelectedId(['root', 'a'], 'a1')).toBe('root');
+    expect(resolveSelectedId(['root', 'a'], null)).toBe('root');
+  });
+
+  it('줄이 하나도 없으면 null', () => {
+    expect(resolveSelectedId([], 'a')).toBeNull();
   });
 });
 

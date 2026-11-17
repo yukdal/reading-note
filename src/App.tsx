@@ -338,7 +338,7 @@ export default function App() {
 
     if (demoMode) {
       return (
-        <div>
+        <div className="demo-editor-shell">
           <div className="app-banner">{DEMO_BANNER_TEXT}</div>
           <BookEditorPage
             key={book.id}
@@ -493,7 +493,7 @@ function BookEditorPage({ book, mode, onBack, onSwitchMode }: BookEditorPageProp
   if (loadError) {
     return (
       <div className="editor-page">
-        <p className="field-error">마인드맵을 불러오지 못했습니다: {loadError}</p>
+        <p className="field-error" role="alert">마인드맵을 불러오지 못했습니다: {loadError}</p>
         <button type="button" className="btn" onClick={onBack}>
           책장으로 돌아가기
         </button>
@@ -621,7 +621,7 @@ function BookMapWorkspace({
         </div>
       </div>
 
-      {draftError && <p className="field-error">이 브라우저에 임시 저장하지 못했습니다: {draftError}</p>}
+      {draftError && <p className="field-error" role="alert">이 브라우저에 임시 저장하지 못했습니다: {draftError}</p>}
 
       {mode === 'map' ? (
         <MindmapEditor nodes={nodes} onChange={handleChange} />
