@@ -37,6 +37,11 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [noteOpenId, setNoteOpenId] = useState<string | null>(null);
+  // 다시 그리기 직전의 선택을 기억하기 위한 최신값(렌더 사이 클로저가 오래된 값을 보지 않게).
+  const selectedIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -113,16 +118,32 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
+  // diffRefresh는 refresh와 똑같이 선택을 지운다(라이브러리 설계). 그래서 색 변경 등으로 다시 그린 뒤
+  // 같은 항목을 다시 선택한다. 삭제됐거나 접혀서 화면에 없으면 findEle가 오류를 내므로 선택 해제로 둔다.
+  function redraw(newNodes: MindmapNode[]) {
     const mind = mindRef.current;
-    if (!mind || nodes === lastSyncedRef.current) return;
+    if (!mind) return;
+    const keepId = selectedIdRef.current;
+    mind.diffRefresh(toMindElixir(newNodes));
+    if (!keepId) return;
+    try {
+      mind.selectNode(mind.findEle(keepId));
+    } catch {
+      // 화면에 없는 항목 — 선택 해제 그대로
+    }
+  }
+
+  useEffect(() => {
+    if (!mindRef.current || nodes === lastSyncedRef.current) return;
     lastSyncedRef.current = nodes;
-    mind.diffRefresh(toMindElixir(nodes));
+    redraw(nodes);
+    // redraw는 ref만 읽으므로 nodes 변화에만 반응하면 된다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes]);
 
   function applyNodes(newNodes: MindmapNode[]) {
     lastSyncedRef.current = newNodes;
-    mindRef.current?.diffRefresh(toMindElixir(newNodes));
+    redraw(newNodes);
     onChange(newNodes);
   }
 
