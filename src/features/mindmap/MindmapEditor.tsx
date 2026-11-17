@@ -178,10 +178,16 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
     setNoteOpenId(null);
   }
   // 맵의 📝(Mind Elixir icons)을 누르면 그 항목 메모를 연다. 키보드 사용자는 도구막대 "메모" 버튼을 쓴다.
+  // Mind Elixir 6의 항목은 class="me-tpc"인 div이고, 📝 위를 눌러도 이벤트 대상은 항목 div가 된다.
+  // 그래서 누른 좌표가 .icons 영역 안인지로 판단한다.
   function handleCanvasClick(e: MouseEvent<HTMLDivElement>) {
-    const icon = (e.target as HTMLElement).closest('.icons');
-    const topic = icon?.closest('me-tpc') as (HTMLElement & { nodeObj?: { id: string } }) | null | undefined;
-    if (topic?.nodeObj) setNoteOpenId(topic.nodeObj.id);
+    const topic = (e.target as HTMLElement).closest('.me-tpc') as (HTMLElement & { nodeObj?: { id: string } }) | null;
+    const icon = topic?.querySelector('.icons');
+    if (!topic?.nodeObj || !icon) return;
+    const r = icon.getBoundingClientRect();
+    if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+      setNoteOpenId(topic.nodeObj.id);
+    }
   }
   function handleZoomIn() {
     const mind = mindRef.current;
