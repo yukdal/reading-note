@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useState, type Dispatch, type SetStateAction } from 'react';
 import { MAX_NOTE_LENGTH, TEXT_COLORS } from './model';
 
 interface NoteEditorProps {
@@ -56,6 +56,9 @@ interface TextColorPickerProps {
   disabled?: boolean;
   /** null이면 기본 글씨색으로 되돌린다. */
   onChange: (color: string | null) => void;
+  /** 열림 상태를 밖에서 제어할 때 쓴다(다른 팝오버와 하나만 열리게). 안 주면 내부 상태로 동작한다. */
+  open?: boolean;
+  onOpenChange?: Dispatch<SetStateAction<boolean>>;
 }
 
 /**
@@ -63,8 +66,16 @@ interface TextColorPickerProps {
  * 휴대폰 맵 도구막대에서는 CSS로 색 버튼을 숨기고 "글씨색" 버튼 하나만 보인다.
  * 그 버튼을 누르면(open) 색 버튼이 도구막대 위에 떠서 열린다. PC와 아웃라인에서는 펼친 그대로다.
  */
-export function TextColorPicker({ value, disabled = false, onChange }: TextColorPickerProps) {
-  const [open, setOpen] = useState(false);
+export function TextColorPicker({
+  value,
+  disabled = false,
+  onChange,
+  open: openProp,
+  onOpenChange,
+}: TextColorPickerProps) {
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = onOpenChange ?? setOpenState;
   const pick = (color: string | null) => {
     onChange(color);
     setOpen(false);

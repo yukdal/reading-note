@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type MouseEvent } from 'react';
+import { useEffect, useId, useRef, useState, type MouseEvent } from 'react';
 import MindElixir from 'mind-elixir';
 import { ko } from 'mind-elixir/i18n';
 import 'mind-elixir/style.css';
@@ -37,6 +37,9 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [noteOpenId, setNoteOpenId] = useState<string | null>(null);
+  // 휴대폰 도구막대의 팝오버(글씨색/보기)는 한 번에 하나만 연다.
+  const [openPopover, setOpenPopover] = useState<'color' | 'view' | null>(null);
+  const viewOptionsId = useId();
   // 다시 그리기 직전의 선택을 기억하기 위한 최신값(렌더 사이 클로저가 오래된 값을 보지 않게).
   const selectedIdRef = useRef<string | null>(null);
   useEffect(() => {
@@ -223,24 +226,55 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
   function handleFit() {
     mindRef.current?.scaleFit();
   }
+  function handleToggleView() {
+    setOpenPopover((p) => (p === 'view' ? null : 'view'));
+  }
+  function handleColorOpenChange(next: boolean | ((prev: boolean) => boolean)) {
+    setOpenPopover((p) => {
+      const value = typeof next === 'function' ? next(p === 'color') : next;
+      return value ? 'color' : null;
+    });
+  }
 
   return (
     <div className="mindmap-editor">
       <p className="mindmap-hint">두 손가락으로 확대·축소할 수 없습니다 — 아래 버튼을 사용하세요.</p>
       <div className="mindmap-toolbar" role="toolbar" aria-label="마인드맵 편집 도구">
-        <button type="button" className="btn" onClick={handleAddChild} disabled={disabled || !selected}>
-          자식 추가
+        <button
+          type="button"
+          className="btn"
+          onClick={handleAddChild}
+          disabled={disabled || !selected}
+          aria-label="자식 추가"
+        >
+          <span className="label-full">자식 추가</span>
+          <span className="label-short" aria-hidden="true">
+            +자식
+          </span>
         </button>
         <button
           type="button"
           className="btn"
           onClick={handleAddSibling}
           disabled={disabled || !selected || isRoot}
+          aria-label="형제 추가"
         >
-          형제 추가
+          <span className="label-full">형제 추가</span>
+          <span className="label-short" aria-hidden="true">
+            +형제
+          </span>
         </button>
-        <button type="button" className="btn" onClick={handleEditText} disabled={disabled || !selected || isRoot}>
-          글 수정
+        <button
+          type="button"
+          className="btn"
+          onClick={handleEditText}
+          disabled={disabled || !selected || isRoot}
+          aria-label="글 수정"
+        >
+          <span className="label-full">글 수정</span>
+          <span className="label-short" aria-hidden="true">
+            수정
+          </span>
         </button>
         <button
           type="button"
@@ -266,7 +300,13 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
         >
           {selected?.note ? '메모 📝' : '메모'}
         </button>
-        <TextColorPicker value={selected?.textColor} onChange={handleTextColor} disabled={disabled || !selected} />
+        <TextColorPicker
+          value={selected?.textColor}
+          onChange={handleTextColor}
+          disabled={disabled || !selected}
+          open={openPopover === 'color'}
+          onOpenChange={handleColorOpenChange}
+        />
         <label className="color-field">
           색상
           <input
@@ -277,15 +317,31 @@ export default function MindmapEditor({ nodes, onChange, readOnly = false }: Min
             aria-label="선택한 노드 색상"
           />
         </label>
-        <button type="button" className="btn" onClick={handleZoomIn} disabled={!ready} aria-label="확대">
-          확대
+        <button
+          type="button"
+          className="btn view-toggle"
+          aria-expanded={openPopover === 'view'}
+          aria-controls={viewOptionsId}
+          onClick={handleToggleView}
+          disabled={!ready}
+        >
+          보기{' '}
+          <span aria-hidden="true">▾</span>
         </button>
-        <button type="button" className="btn" onClick={handleZoomOut} disabled={!ready} aria-label="축소">
-          축소
-        </button>
-        <button type="button" className="btn" onClick={handleFit} disabled={!ready}>
-          화면 맞춤
-        </button>
+        <div id={viewOptionsId} className={`view-options${openPopover === 'view' ? ' open' : ''}`} role="group" aria-label="화면 보기">
+          <button type="button" className="btn" onClick={handleZoomIn} disabled={!ready} aria-label="확대">
+            확대
+          </button>
+          <button type="button" className="btn" onClick={handleZoomOut} disabled={!ready} aria-label="축소">
+            축소
+          </button>
+          <button type="button" className="btn" onClick={handleFit} disabled={!ready} aria-label="화면 맞춤">
+            <span className="label-full">화면 맞춤</span>
+            <span className="label-short" aria-hidden="true">
+              맞춤
+            </span>
+          </button>
+        </div>
       </div>
 
       {noteNode && (
