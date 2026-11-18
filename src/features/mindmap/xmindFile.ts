@@ -43,7 +43,6 @@ function buildSheet(title: string, nodes: MindmapNode[]) {
     id: crypto.randomUUID(),
     class: 'sheet',
     title,
-    topicPositioning: 'fixed',
     rootTopic: buildTopic(childrenOf, center, true),
   };
 }
@@ -63,7 +62,8 @@ export function toXmindArchive(sheets: { title: string; nodes: MindmapNode[] }[]
   });
 
   const manifest = { 'file-entries': { 'content.json': {}, 'metadata.json': {} } };
-  const metadata = { activeSheetId: content[0].id };
+  // dataStructureVersion은 XMind 26.01이 쓴 파일에서 확인했다. 없으면 구형 포맷으로 읽힐 수 있다.
+  const metadata = { dataStructureVersion: '2', activeSheetId: content[0].id };
 
   const encoder = new TextEncoder();
   return zipSync(
