@@ -10,6 +10,7 @@ import {
   MAX_BACKUP_FILE_BYTES,
 } from './backup';
 import type { Backup, DiffResult, ImportResult, Snapshot } from './backup';
+import { toXmindArchive, xmindFileName, downloadXmind } from '../mindmap/xmindFile';
 
 export interface BackupPanelProps {
   readOnly: boolean; // 연결 장애 시 true → 가져오기 비활성
@@ -20,11 +21,13 @@ export interface BackupPanelProps {
   exportEnabled?: boolean;
 }
 
+type ExportKind = 'json' | 'xmind';
+
 type ExportState =
   | { kind: 'idle' }
-  | { kind: 'busy' }
-  | { kind: 'error'; message: string }
-  | { kind: 'done' };
+  | { kind: 'busy'; which: ExportKind }
+  | { kind: 'error'; which: ExportKind; message: string }
+  | { kind: 'done'; which: ExportKind };
 
 type ImportPhase =
   | { kind: 'idle' }
@@ -35,6 +38,13 @@ type ImportPhase =
 
 function errorText(err: unknown): string {
   return err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';
+}
+
+function exportStatusText(state: ExportState): string {
+  if (state.kind === 'idle') return '';
+  if (state.kind === 'error') return state.message;
+  const label = state.which === 'json' ? 'JSON' : 'XMind';
+  return state.kind === 'busy' ? `${label} 내보내는 중입니다...` : `${label} 내보내기가 완료되었습니다.`;
 }
 
 function importStatusText(phase: ImportPhase, error: string | null): string {
@@ -67,16 +77,37 @@ export default function BackupPanel({
 
   async function handleExport() {
     if (hasUnsavedChanges) {
-      setExportState({ kind: 'error', message: '저장되지 않은 편집이 있습니다. 저장이 끝난 뒤 내보내 주세요.' });
+      setExportState({ kind: 'error', which: 'json', message: '저장되지 않은 편집이 있습니다. 저장이 끝난 뒤 내보내 주세요.' });
       return;
     }
-    setExportState({ kind: 'busy' });
+    setExportState({ kind: 'busy', which: 'json' });
     try {
       const snapshot = await loadSnapshot();
       downloadJson(exportFileName(), snapshot);
-      setExportState({ kind: 'done' });
+      setExportState({ kind: 'done', which: 'json' });
     } catch (err) {
-      setExportState({ kind: 'error', message: errorText(err) });
+      setExportState({ kind: 'error', which: 'json', message: errorText(err) });
+    }
+  }
+
+  async function handleExportXmind() {
+    if (hasUnsavedChanges) {
+      setExportState({ kind: 'error', which: 'xmind', message: '저장되지 않은 편집이 있습니다. 저장이 끝난 뒤 내보내 주세요.' });
+      return;
+    }
+    setExportState({ kind: 'busy', which: 'xmind' });
+    try {
+      const snapshot = await loadSnapshot();
+      const mapByBookId = new Map(snapshot.mindmaps.map((m) => [m.book_id, m] as const));
+      // 맵이 아직 없는 책은 건너뛴다. 한 권 때문에 내보내기 전체가 실패하지 않게.
+      const sheets = snapshot.books
+        .map((book) => ({ title: book.title, nodes: mapByBookId.get(book.id)?.data.nodes ?? [] }))
+        .filter((sheet) => sheet.nodes.length > 0);
+      const bytes = toXmindArchive(sheets);
+      downloadXmind(xmindFileName(), bytes);
+      setExportState({ kind: 'done', which: 'xmind' });
+    } catch (err) {
+      setExportState({ kind: 'error', which: 'xmind', message: errorText(err) });
     }
   }
 
@@ -166,14 +197,14 @@ export default function BackupPanel({
           <button type="button" className="btn" onClick={handleExport} disabled={exportState.kind === 'busy'}>
             앱 안의 JSON으로 내보내기
           </button>
+          <button type="button" className="btn" onClick={handleExportXmind} disabled={exportState.kind === 'busy'}>
+            XMind 파일(.xmind)로 내보내기
+          </button>
           <p className="backup-status" aria-live="polite">
-            {exportState.kind === 'error'
-              ? exportState.message
-              : exportState.kind === 'busy'
-                ? '내보내는 중입니다...'
-                : exportState.kind === 'done'
-                  ? '내보내기가 완료되었습니다.'
-                  : ''}
+            {exportStatusText(exportState)}
+          </p>
+          <p className="backup-status">
+            XMind 파일에는 메모, 가지색, 글씨색, 접힘 상태가 들어가지 않습니다. 글과 구조만 저장됩니다.
           </p>
         </div>
       )}
