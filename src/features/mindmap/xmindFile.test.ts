@@ -60,6 +60,19 @@ describe('toXmindArchive', () => {
     expect('children' in m1).toBe(false);
   });
 
+  it('메모는 notes.plain.content로 들어가고, 메모가 없는 노드에는 notes 키가 없다', () => {
+    const nodes: MindmapNode[] = [
+      { id: 'a', parentId: null, text: 'A', color: '#111111', collapsed: false, order: 0, note: '메모 내용' },
+      { id: 'b', parentId: 'a', text: 'B', color: '#222222', collapsed: false, order: 0 },
+    ];
+    const files = unzipSync(toXmindArchive([{ title: '제목', nodes }]));
+    const content = decode(files['content.json']) as {
+      rootTopic: Record<string, unknown> & { children: { attached: Record<string, unknown>[] } };
+    }[];
+    expect(content[0].rootTopic.notes).toEqual({ plain: { content: '메모 내용' } });
+    expect('notes' in content[0].rootTopic.children.attached[0]).toBe(false);
+  });
+
   it('metadata.json의 activeSheetId가 첫 시트의 id와 같다', () => {
     const bytes = toXmindArchive([{ title: 'Central Topic', nodes: xmindExampleNodes }]);
     const files = unzipSync(bytes);

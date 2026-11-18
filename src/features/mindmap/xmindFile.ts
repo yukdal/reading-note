@@ -2,21 +2,24 @@ import { zipSync } from 'fflate';
 import type { MindmapNode } from '../../types';
 import { validateNodes } from './model';
 
-// XMind 앱이 읽는 .xmind 포맷(ZIP, 무압축) 중 공식 샘플 파일에서 확인된 최소 구조만 쓴다.
-// 메모(note)·가지색(color)·글씨색(textColor)·접힘(collapsed)의 .xmind 쪽 필드 이름은
-// 확인되지 않았으므로 추측해서 넣지 않는다 — 이 네 가지는 내보낼 때 사라진다(손실 변환).
+// XMind 앱이 읽는 .xmind 포맷(ZIP, 무압축) 중 실제 바이트에서 확인된 구조만 쓴다.
+// 메모는 XMind 공식 패키지 xmind-generator가 만든 파일에서 notes.plain.content로 확인했다.
+// 가지색(color)·글씨색(textColor)·접힘(collapsed)의 필드 이름은 아직 확인되지 않았으므로
+// 추측해서 넣지 않는다 — 이 세 가지는 내보낼 때 사라진다(손실 변환).
 
 interface XmindTopic {
   id: string;
   class: 'topic';
   title: string;
   structureClass?: string;
+  notes?: { plain: { content: string } };
   children?: { attached: XmindTopic[] };
 }
 
 function buildTopic(childrenOf: Map<string, MindmapNode[]>, node: MindmapNode, isRoot: boolean): XmindTopic {
   const kids = childrenOf.get(node.id) ?? [];
   const topic: XmindTopic = { id: node.id, class: 'topic', title: node.text };
+  if (node.note) topic.notes = { plain: { content: node.note } };
   if (isRoot) topic.structureClass = 'org.xmind.ui.map.unbalanced';
   if (kids.length > 0) {
     topic.children = { attached: kids.map((k) => buildTopic(childrenOf, k, false)) };

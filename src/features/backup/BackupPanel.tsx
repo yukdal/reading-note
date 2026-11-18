@@ -204,7 +204,7 @@ export default function BackupPanel({
             {exportStatusText(exportState)}
           </p>
           <p className="backup-status">
-            XMind 파일에는 메모, 가지색, 글씨색, 접힘 상태가 들어가지 않습니다. 글과 구조만 저장됩니다.
+            XMind 파일에는 글, 구조, 메모가 저장됩니다. 가지색, 글씨색, 접힘 상태는 들어가지 않습니다.
           </p>
         </div>
       )}
