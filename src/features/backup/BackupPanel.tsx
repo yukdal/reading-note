@@ -14,12 +14,14 @@ import { toXmindArchive, xmindFileName, downloadXmind } from '../mindmap/xmindFi
 
 export interface BackupPanelProps {
   readOnly: boolean; // 연결 장애 시 true → 가져오기 비활성
-  hasUnsavedChanges: boolean; // 미저장 맵 편집이 있으면 true
+  checkUnsavedChanges: () => Promise<boolean>; // 미저장 맵 편집(초안)이 있으면 true
   onImported: () => void;
   loadSnapshot?: () => Promise<Snapshot>;
   importData?: (diff: DiffResult) => Promise<ImportResult>;
   exportEnabled?: boolean;
 }
+
+const UNSAVED_MESSAGE = '저장되지 않은 편집이 있습니다. 해당 책을 열어 저장한 뒤 다시 시도해 주세요.';
 
 type ExportKind = 'json' | 'xmind';
 
@@ -67,7 +69,7 @@ function importStatusText(phase: ImportPhase, error: string | null): string {
 }
 
 export default function BackupPanel({
-  readOnly, hasUnsavedChanges, onImported,
+  readOnly, checkUnsavedChanges, onImported,
   loadSnapshot = fetchSnapshot, importData = applyImport, exportEnabled = true,
 }: BackupPanelProps) {
   const fileInputId = useId();
@@ -76,8 +78,8 @@ export default function BackupPanel({
   const [importError, setImportError] = useState<string | null>(null);
 
   async function handleExport() {
-    if (hasUnsavedChanges) {
-      setExportState({ kind: 'error', which: 'json', message: '저장되지 않은 편집이 있습니다. 저장이 끝난 뒤 내보내 주세요.' });
+    if (await checkUnsavedChanges().catch(() => false)) {
+      setExportState({ kind: 'error', which: 'json', message: UNSAVED_MESSAGE });
       return;
     }
     setExportState({ kind: 'busy', which: 'json' });
@@ -91,8 +93,8 @@ export default function BackupPanel({
   }
 
   async function handleExportXmind() {
-    if (hasUnsavedChanges) {
-      setExportState({ kind: 'error', which: 'xmind', message: '저장되지 않은 편집이 있습니다. 저장이 끝난 뒤 내보내 주세요.' });
+    if (await checkUnsavedChanges().catch(() => false)) {
+      setExportState({ kind: 'error', which: 'xmind', message: UNSAVED_MESSAGE });
       return;
     }
     setExportState({ kind: 'busy', which: 'xmind' });

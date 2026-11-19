@@ -65,6 +65,24 @@ describe('Autosaver', () => {
     expect(calls[1][0].text).toBe('b');
   });
 
+  it('저장 중 변경이 쌓이면 이어 저장 전에 새 버전을 알린다', async () => {
+    const resolvers: Array<(v: number) => void> = [];
+    const events: string[] = [];
+    const save: SaveFn = () => new Promise((resolve) => {
+      events.push('save');
+      resolvers.push((v) => resolve({ status: 'ok', version: v, updated_at: 't' }));
+    });
+    const autosaver = new Autosaver(save, 0, (s, v) => events.push(`${s}:${v ?? ''}`));
+    autosaver.notifyChange(nodes('a'));
+    await vi.advanceTimersByTimeAsync(1000);
+    autosaver.notifyChange(nodes('b'));
+    resolvers[0](5);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(events.indexOf('saving:5')).toBeGreaterThan(-1);
+    expect(events.indexOf('saving:5')).toBeLessThan(events.lastIndexOf('save'));
+    expect(events.filter((e) => e === 'save')).toHaveLength(2);
+  });
+
   it('저장 중에는 동시에 두 번째 요청을 보내지 않는다', async () => {
     let inFlight = 0;
     let maxInFlight = 0;

@@ -197,3 +197,29 @@ export async function commitSavedMap(
 ): Promise<void> {
   await putRecord(userId, bookId, (current) => acknowledgeSave(current, saved, expectedVersion));
 }
+
+/** 저장되지 않은 초안이 남아 있는 책 id 목록. */
+export async function listDraftBookIds(userId: string): Promise<string[]> {
+  const db = await openDb();
+  try {
+    return await new Promise<string[]>((resolve, reject) => {
+      const range = IDBKeyRange.bound(`${userId}:`, `${userId}:￿`);
+      const store = db.transaction(STORE, 'readonly').objectStore(STORE);
+      const keysReq = store.getAllKeys(range);
+      const valsReq = store.getAll(range);
+      let remaining = 2;
+      const done = () => {
+        if (--remaining !== 0) return;
+        resolve(keysReq.result
+          .filter((_, i) => (valsReq.result[i] as CachedMap | undefined)?.draft)
+          .map((key) => String(key).slice(userId.length + 1)));
+      };
+      keysReq.onsuccess = done;
+      valsReq.onsuccess = done;
+      keysReq.onerror = () => reject(keysReq.error ?? new Error('초안 목록을 읽을 수 없습니다.'));
+      valsReq.onerror = () => reject(valsReq.error ?? new Error('초안 목록을 읽을 수 없습니다.'));
+    });
+  } finally {
+    db.close();
+  }
+}

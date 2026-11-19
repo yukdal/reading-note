@@ -81,6 +81,7 @@ export class Autosaver {
           this.onState('saved', result.version);
         } else {
           // 저장 중 새 변경이 쌓임 → draft를 지우지 않고 바로 다음 요청으로 이어감
+          this.onState('saving', result.version); // 이어 저장 전에 화면 쪽 기준 버전도 갱신
           this.flush();
         }
       },

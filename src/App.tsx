@@ -12,7 +12,7 @@ import OutlineEditor from './features/mindmap/OutlineEditor';
 import RealMapEditorScreen from './features/mindmap/RealMapEditorScreen';
 import { createInitialNodes, setRootText } from './features/mindmap/model';
 import { useAutosave, type SaveFn, type SaveState } from './features/mindmap/useAutosave';
-import { clearUser, getCachedMap, getBooksCache, putBooksCache, putDraft, putSaved } from './lib/localCache';
+import { clearUser, getCachedMap, listDraftBookIds, getBooksCache, putBooksCache, putDraft, putSaved } from './lib/localCache';
 import { supabase } from './lib/supabase';
 import {
   classifyError,
@@ -211,6 +211,7 @@ export default function App() {
 
       const result = await apiUpdateBook(current.id, current.updated_at, input, mapVersion);
       if (result.status === 'conflict') {
+        void refreshCachedMap(userId, current.id);
         setBooks((prev) => prev.map((b) => (b.id === current.id ? result.book : b)));
         setEditing(result.book); // 폼의 입력 내용(raw state)은 리마운트되지 않아 그대로 남는다.
         setBookActionError('다른 기기에서 수정되어 최신 내용을 불러왔습니다. 다시 수정해 주세요.');
@@ -221,11 +222,21 @@ export default function App() {
         void putBooksCache(userId, next);
         return next;
       });
+      if (titleChanged) void refreshCachedMap(userId, current.id); // 제목이 바뀌면 서버가 맵 버전을 올린다
       closeForm();
     } catch (err) {
       setBookActionError(classifyError(err).message);
     } finally {
       setBookActionBusy(false);
+    }
+  }
+
+  /** 서버의 최신 맵 버전으로 캐시를 맞춘다. 실패하면 캐시를 비워 다음에 서버에서 읽게 한다. 절대 throw하지 않는다. */
+  async function refreshCachedMap(uid: string, bookId: string) {
+    try {
+      await putSaved(uid, bookId, await getMindmap(bookId));
+    } catch {
+      await putSaved(uid, bookId, null).catch(() => {});
     }
   }
 
@@ -255,6 +266,7 @@ export default function App() {
       const mapVersion = cached.saved?.version ?? (await getMindmap(id)).version;
       const result = await apiDeleteBook(id, book.updated_at, mapVersion);
       if (result.status === 'conflict') {
+        void refreshCachedMap(userId, id);
         setBooks((prev) => prev.map((b) => (b.id === id ? result.book : b)));
         setSelected((sel) => (sel && sel.book.id === id ? { ...sel, book: result.book } : sel));
         setBookActionError('다른 기기에서 수정되었습니다. 최신 내용을 확인한 뒤 다시 삭제해 주세요.');
@@ -279,6 +291,8 @@ export default function App() {
   async function handleLogout() {
     if (demoMode || !supabase || !userId) return;
     const uid = userId;
+    const ids = await listDraftBookIds(uid).catch(() => []);
+    if (ids.length > 0 && !window.confirm(`저장되지 않은 초안 ${ids.length}권이 이 브라우저에서 지워집니다. 먼저 맵 화면의 '내 초안 내보내기'로 저장할 수 있습니다. 그래도 로그아웃할까요?`)) return;
     await supabase.auth.signOut();
     await clearUser(uid).catch(() => {});
     setBooks([]);
@@ -407,7 +421,7 @@ export default function App() {
 
         <BackupPanel
           readOnly={isOffline}
-          hasUnsavedChanges={false}
+          checkUnsavedChanges={() => (userId ? listDraftBookIds(userId).then((ids) => ids.length > 0) : Promise.resolve(false))}
           onImported={() => void loadBooks()}
           exportEnabled={!demoMode}
           loadSnapshot={demoMode ? () => fetchDemoSnapshot(demoBooks) : undefined}
